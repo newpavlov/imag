@@ -859,7 +859,16 @@ impl Entry {
     ///
     /// Currently, this only verifies the header. This might change in the future.
     pub fn verify(&self) -> Result<()> {
-        self.header.verify()
+        if !has_main_section(&self.header)? {
+            Err(SE::from_kind(SEK::MissingMainSection))
+        } else if !has_imag_version_in_main_section(&self.header)? {
+            Err(SE::from_kind(SEK::MissingVersionInfo))
+        } else if !has_only_tables(&self.header)? {
+            debug!("Could not verify that it only has tables in its base table");
+            Err(SE::from_kind(SEK::NonTableInBaseTable))
+        } else {
+            Ok(())
+        }
     }
 
 }
@@ -877,14 +886,10 @@ impl PartialEq for Entry {
 /// Extension trait for top-level toml::Value::Table, will only yield correct results on the
 /// top-level Value::Table, but not on intermediate tables.
 pub trait Header {
-    fn verify(&self) -> Result<()>;
     fn parse(s: &str) -> Result<Value>;
 }
 
 impl Header for Value {
-
-    fn verify(&self) -> Result<()> {
-    }
 
     fn parse(s: &str) -> Result<Value> {
         use toml::de::from_str;
