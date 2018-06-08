@@ -72,8 +72,8 @@ fn create_entry<'a>(diary: &'a Store, diaryname: &str, rt: &Runtime) -> FileLock
             }
         })
         .map(|timed| {
-            let id = create_id_from_clispec(&create, &diaryname, timed);
-            diary.retrieve(id).chain_err(|| DEK::StoreReadError)
+            let time = create_id_from_clispec(&create, &diaryname, timed);
+            diary.new_entry_at(&diaryname, time).chain_err(|| DEK::StoreWriteError)
         })
         .unwrap_or_else(|| {
             debug!("Creating non-timed entry");
@@ -87,41 +87,23 @@ fn create_entry<'a>(diary: &'a Store, diaryname: &str, rt: &Runtime) -> FileLock
 }
 
 
-fn create_id_from_clispec(create: &ArgMatches, diaryname: &str, timed_type: Timed) -> DiaryId {
+fn create_id_from_clispec(create: &ArgMatches, diaryname: &str, timed_type: Timed) -> NaiveDateTime {
     use std::str::FromStr;
 
-    let get_hourly_id = |create: &ArgMatches| -> DiaryId {
-        let time = DiaryId::now(String::from(diaryname));
-        let hr = create
-            .value_of("hour")
-            .map(|v| { debug!("Creating hourly entry with hour = {:?}", v); v })
-            .and_then(|s| {
-                FromStr::from_str(s)
-                    .map_err(|_| warn!("Could not parse hour: '{}'", s))
-                    .ok()
-            })
-            .unwrap_or(time.hour());
-
-        time.with_hour(hr)
-    };
+    let dt  = Local::now();
+    let ndt = dt.naive_local();
 
     match timed_type {
         Timed::Daily => {
             debug!("Creating daily-timed entry");
-            get_hourly_id(create)
-                .with_hour(0)
-                .with_minute(0)
-                .with_second(0)
+            ndt.with_hour(0).with_minute(0).with_second(0)
         },
         Timed::Hourly => {
             debug!("Creating hourly-timed entry");
-            get_hourly_id(create)
-                .with_minute(0)
-                .with_second(0)
+            ndt.with_minute(0).with_second(0)
         },
 
         Timed::Minutely => {
-            let time = get_hourly_id(create);
             let min = create
                 .value_of("minute")
                 .map(|m| { debug!("minute = {:?}", m); m })
@@ -132,12 +114,10 @@ fn create_id_from_clispec(create: &ArgMatches, diaryname: &str, timed_type: Time
                 })
                 .unwrap_or(time.minute());
 
-            time.with_minute(min)
-                .with_second(0)
+            ndt.with_minute(min).with_second(0)
         },
 
         Timed::Secondly => {
-            let time = get_hourly_id(create);
             let min = create
                 .value_of("minute")
                 .map(|m| { debug!("minute = {:?}", m); m })
@@ -158,7 +138,7 @@ fn create_id_from_clispec(create: &ArgMatches, diaryname: &str, timed_type: Time
                 })
                 .unwrap_or(time.second());
 
-            time.with_minute(min).with_second(sec)
+            ndt.with_minute(min).with_second(sec)
         },
     }
 }
