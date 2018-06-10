@@ -473,14 +473,13 @@ impl Store {
                 .map_err(|_| SE::from_kind(SEK::LockPoisoned))
                 .chain_err(|| SEK::DeleteCallError(id.clone()))?;
 
-            match entries.get(&id) {
+            let do_remove = match entries.get(&id) {
                 Some(e) => if e.is_borrowed() { // entry is currently borrowed, we cannot delete it
-                    return Err(SE::from_kind(SEK::IdLocked)).chain_err(|| SEK::DeleteCallError(id))
+                    return Err(SE::from_kind(SEK::IdLocked)).chain_err(|| SEK::DeleteCallError(id));
+                    // false
                 } else { // Entry is in the cache
-                    drop(e);
-
                     // Remove Entry from the cache
-                    let _ = entries.remove(&id);
+                    true
                 },
 
                 None => {
@@ -492,7 +491,13 @@ impl Store {
                         return Err(SE::from_kind(SEK::FileNotFound))
                             .chain_err(|| SEK::DeleteCallError(id))
                     } // else { continue }
+
+                    false
                 },
+            };
+
+            if do_remove {
+                let _ = entries.remove(&id);
             }
         }
 
