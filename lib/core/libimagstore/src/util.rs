@@ -60,7 +60,7 @@ pub fn entry_buffer_to_header_content(buf: &str) -> Result<(Value, String)> {
         }
     }
 
-    toml::de::from_str(content).map_err(From::from).map(|h| (h, content))
+    ::toml::de::from_str(content).map_err(From::from).map(|h| (h, content))
 }
 
 #[cfg(test)]
