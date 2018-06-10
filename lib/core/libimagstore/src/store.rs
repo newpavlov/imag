@@ -460,18 +460,18 @@ impl Store {
 
         debug!("Deleting id: '{}'", id);
 
+        // Small optimization: We need the pathbuf for deleting, but when calling
+        // StoreId::exists(), a PathBuf object gets allocated. So we simply get a
+        // PathBuf here, check whether it is there and if it is, we can re-use it to
+        // delete the filesystem file.
+        let pb = id.clone().into_pathbuf()?;
+
         {
             let mut entries = self
                 .entries
                 .write()
                 .map_err(|_| SE::from_kind(SEK::LockPoisoned))
                 .chain_err(|| SEK::DeleteCallError(id.clone()))?;
-
-            // Small optimization: We need the pathbuf for deleting, but when calling
-            // StoreId::exists(), a PathBuf object gets allocated. So we simply get a
-            // PathBuf here, check whether it is there and if it is, we can re-use it to
-            // delete the filesystem file.
-            let pb = id.clone().into_pathbuf()?;
 
             match entries.get(&id) {
                 Some(e) => if e.is_borrowed() { // entry is currently borrowed, we cannot delete it
