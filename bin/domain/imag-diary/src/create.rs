@@ -18,9 +18,10 @@
 //
 
 use clap::ArgMatches;
+use chrono::NaiveDateTime;
+use chrono::Local;
 
 use libimagdiary::diary::Diary;
-use libimagdiary::diaryid::DiaryId;
 use libimagdiary::error::DiaryErrorKind as DEK;
 use libimagdiary::error::ResultExt;
 use libimagentryedit::edit::Edit;
@@ -112,7 +113,7 @@ fn create_id_from_clispec(create: &ArgMatches, diaryname: &str, timed_type: Time
                         .map_err(|_| warn!("Could not parse minute: '{}'", s))
                         .ok()
                 })
-                .unwrap_or(time.minute());
+                .unwrap_or(ndt.minute());
 
             ndt.with_minute(min).with_second(0)
         },
@@ -126,7 +127,7 @@ fn create_id_from_clispec(create: &ArgMatches, diaryname: &str, timed_type: Time
                         .map_err(|_| warn!("Could not parse minute: '{}'", s))
                         .ok()
                 })
-                .unwrap_or(time.minute());
+                .unwrap_or(ndt.minute());
 
             let sec = create
                 .value_of("second")
@@ -136,7 +137,7 @@ fn create_id_from_clispec(create: &ArgMatches, diaryname: &str, timed_type: Time
                         .map_err(|_| warn!("Could not parse second: '{}'", s))
                         .ok()
                 })
-                .unwrap_or(time.second());
+                .unwrap_or(ndt.second());
 
             ndt.with_minute(min).with_second(sec)
         },
