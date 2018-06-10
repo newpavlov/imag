@@ -26,7 +26,6 @@ use libimagentryutil::isa::Is;
 
 use chrono::offset::Local;
 use chrono::Datelike;
-use chrono::NaiveDateTime;
 use itertools::Itertools;
 use chrono::naive::NaiveDateTime;
 use chrono::Timelike;
@@ -48,7 +47,7 @@ pub trait Diary {
     // create or get a new entry for now
     fn new_entry_now(&self, diary_name: &str) -> Result<FileLockEntry>;
 
-    fn new_entry_at(&self, &NaiveDateTime) -> Result<FileLockEntry>;
+    fn new_entry_at(&self, diary_name: &str, ndt: &NaiveDateTime) -> Result<FileLockEntry>;
 
     // Get an iterator for iterating over all entries of a Diary
     fn entries(&self, diary_name: &str) -> Result<DiaryEntryIterator>;
