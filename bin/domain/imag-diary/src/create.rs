@@ -74,7 +74,7 @@ fn create_entry<'a>(diary: &'a Store, diaryname: &str, rt: &Runtime) -> FileLock
         })
         .map(|timed| {
             let time = create_id_from_clispec(&create, &diaryname, timed);
-            diary.new_entry_at(&diaryname, time).chain_err(|| DEK::StoreWriteError)
+            diary.new_entry_at(&diaryname, &time).chain_err(|| DEK::StoreWriteError)
         })
         .unwrap_or_else(|| {
             debug!("Creating non-timed entry");
