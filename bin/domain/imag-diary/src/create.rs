@@ -20,6 +20,7 @@
 use clap::ArgMatches;
 use chrono::NaiveDateTime;
 use chrono::Local;
+use chrono::Timelike;
 
 use libimagdiary::diary::Diary;
 use libimagdiary::error::DiaryErrorKind as DEK;
